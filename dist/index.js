@@ -50,6 +50,7 @@ const parse_diff_1 = __importDefault(__nccwpck_require__(4833));
 const minimatch_1 = __importDefault(__nccwpck_require__(2002));
 const GITHUB_TOKEN = core.getInput("GITHUB_TOKEN");
 const OPENAI_API_KEY = core.getInput("OPENAI_API_KEY");
+const OPENAI_API_MODEL = core.getInput("OPENAI_API_MODEL");
 const octokit = new rest_1.Octokit({ auth: GITHUB_TOKEN });
 const configuration = new openai_1.Configuration({
     apiKey: OPENAI_API_KEY,
@@ -125,6 +126,7 @@ function createPrompt(file, chunk, prDetails) {
 - Provide comments and suggestions ONLY if there is something to improve, otherwise return an empty array.
 - Write the comment in GitHub Markdown format.
 - Use the given description only for the overall context and only comment the code.
+- 한국어를 사용해주세요.
 - IMPORTANT: NEVER suggest adding comments to the code.
 
 Review the following code diff in the file "${file.to}" and take the pull request title and description into account when writing the response.
@@ -151,7 +153,7 @@ function getAIResponse(prompt) {
     var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         const queryConfig = {
-            model: "gpt-4",
+            model: OPENAI_API_MODEL,
             temperature: 0.2,
             max_tokens: 700,
             top_p: 1,
@@ -210,16 +212,15 @@ function main() {
             const newBaseSha = eventData.before;
             const newHeadSha = eventData.after;
             const response = yield octokit.repos.compareCommits({
+                headers: {
+                    accept: "application/vnd.github.v3.diff",
+                },
                 owner: prDetails.owner,
                 repo: prDetails.repo,
                 base: newBaseSha,
                 head: newHeadSha,
             });
-            diff = response.data.diff_url
-                ? yield octokit
-                    .request({ url: response.data.diff_url })
-                    .then((res) => res.data)
-                : null;
+            diff = String(response.data);
         }
         else {
             console.log("Unsupported event:", process.env.GITHUB_EVENT_NAME);
