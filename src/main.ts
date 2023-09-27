@@ -97,6 +97,14 @@ async function getBaseAndHeadShas(
 }
 
 function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
+  // @ts-expect-error - ln and ln2 exists where needed
+  const startLineNumber = chunk.changes[0]?.ln || chunk.changes[0]?.ln2 || -1;
+  // @ts-expect-error - ln and ln2 exists where needed
+  const endLineNumber =
+    chunk.changes[chunk.changes.length - 1]?.ln ||
+    chunk.changes[chunk.changes.length - 1]?.ln2 ||
+    -1;
+
   return `Your task is to review pull requests. Instructions:
 - Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]
 - Do not give positive comments or compliments.
@@ -104,6 +112,9 @@ function createPrompt(file: File, chunk: Chunk, prDetails: PRDetails): string {
 - Write the comment in GitHub Markdown format.
 - Use the given description only for the overall context and only comment the code.
 - 한국어를 사용해주세요.
+- Review the following code diff in the file "${
+    file.to
+  }" with line numbers ranging from ${startLineNumber} to ${endLineNumber}. Take the pull request title and description into account when writing the response.
 - IMPORTANT: NEVER suggest adding comments to the code.
 
 Review the following code diff in the file "${

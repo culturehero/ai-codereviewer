@@ -121,18 +121,20 @@ function getBaseAndHeadShas(owner, repo, pull_number) {
 }
 function createPrompt(file, chunk, prDetails) {
     return `Your task is to review pull requests. Instructions:
-- Provide the response in following JSON format:  [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]
-- Do not give positive comments or compliments.
-- Provide comments and suggestions ONLY if there is something to improve, otherwise return an empty array.
-- Write the comment in GitHub Markdown format.
-- Use the given description only for the overall context and only comment the code.
-- 한국어를 사용해주세요.
-- IMPORTANT: NEVER suggest adding comments to the code.
-
-Review the following code diff in the file "${file.to}" and take the pull request title and description into account when writing the response.
+  - Provide the response in the following JSON format: [{"lineNumber":  <line_number>, "reviewComment": "<review comment>"}]
+  - When writing a review comment, make sure it corresponds to the given line numbers in the code diff.
+  - Do not give positive comments or compliments.
+  - Provide comments and suggestions ONLY if there is something to improve, otherwise return an empty array.
+  - Write the comment in GitHub Markdown format.
+  - Use the given description only for the overall context and only comment the code.
+  - 한국어를 사용해주세요.
+  - IMPORTANT: NEVER suggest adding comments to the code.
+  - Your review comments should be within the provided diff range.
   
-Pull request title: ${prDetails.title}
-Pull request description:
+  Review the following code diff in the file "${file.to}" and take the pull request title and description into account when writing the response.
+    
+  Pull request title: ${prDetails.title}
+  Pull request description:
 
 ---
 ${prDetails.description}
@@ -147,6 +149,7 @@ ${chunk.changes
         .map((c) => `${c.ln ? c.ln : c.ln2} ${c.content}`)
         .join("\n")}
 \`\`\`
+Example response: [{"lineNumber": 5, "reviewComment": "변수명을 명확하게 해주세요."}]
 `;
 }
 function getAIResponse(prompt) {
